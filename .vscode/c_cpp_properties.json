@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "/Library/Frameworks/SDL2_image.framework/Headers",
+                "/Library/Frameworks/SDL2.framework/Headers",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/local/bin/gcc-10",
+            "cStandard": "c99",
+            "compilerArgs": [
+                "-I /usr/local/include/SDL2",
+                "-I include"
+            ],
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "macos-gcc-x64"
+        }
+    ],
+    "version": 4
+}
