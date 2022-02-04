@@ -6,6 +6,13 @@ int game_is_running = FALSE;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
+struct ball {
+    float x;
+    float y;
+    float width;
+    float height;
+} ball;
+
 int initialize_window() {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         fprintf(stderr, "Error initializing SDL.\n");
@@ -33,7 +40,12 @@ int initialize_window() {
     return TRUE;
 }
 
-void setup() {}
+void setup() {
+    ball.x = 20;
+    ball.y = 20;
+    ball.height = 15;
+    ball.width = 15;
+}
 
 void process_input() {
     SDL_Event event;
@@ -55,7 +67,25 @@ void process_input() {
 
 void update() {}
 
-void render() {}
+void render() {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    // TODO: Start drawing game objects
+    // Draw the "ball"
+    SDL_Rect ball_rect = {ball.x, ball.y, ball.width, ball.height};
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderFillRect(renderer, &ball_rect);
+
+    SDL_RenderPresent(renderer);
+}
+
+void destroy_window() {
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+}
 
 int main() {
     game_is_running = initialize_window();
@@ -67,6 +97,8 @@ int main() {
         update();
         render();
     }
+
+    destroy_window();
 
     return 0;
 }
