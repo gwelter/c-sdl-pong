@@ -1,23 +1,28 @@
 #include "constants.h"
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-int last_frame_time = 0;
-int game_is_running = FALSE;
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
-
-struct ball {
+typedef struct Game_Object {
     float x;
     float y;
     float width;
     float height;
-} ball;
+    float vel_x;
+    float vel_y;
+} Game_Object;
+Game_Object ball, paddle_1, paddle_2;
+
+int last_frame_time = 0;
+int game_is_running = false;
+SDL_Window *window = NULL;
+SDL_Renderer *renderer = NULL;
 
 int initialize_window() {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         fprintf(stderr, "Error initializing SDL.\n");
-        return FALSE;
+        return false;
     }
 
     window = SDL_CreateWindow(NULL,
@@ -29,23 +34,70 @@ int initialize_window() {
 
     if (!window) {
         fprintf(stderr, "Error creating SDL window.\n");
-        return FALSE;
+        return false;
     }
 
     renderer = SDL_CreateRenderer(window, -1, 0);
     if (!renderer) {
         fprintf(stderr, "Error creating SDL renderer.\n");
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void setup() {
-    ball.x = 20;
-    ball.y = 20;
-    ball.height = 15;
-    ball.width = 15;
+    int middleHeight = WINDOW_HEIGHT / 2;
+    int middleWidth = WINDOW_WIDTH / 2;
+
+    ball.height = 10;
+    ball.width = 10;
+    ball.x = middleWidth - ball.width / 2;
+    ball.y = middleHeight - ball.height / 2;
+    ball.vel_x = 0;
+    ball.vel_y = 0;
+
+    paddle_1.height = 100;
+    paddle_1.width = 10;
+    paddle_1.x = 20;
+    paddle_1.y = middleHeight - paddle_1.height / 2;
+    paddle_1.vel_x = 0;
+    paddle_1.vel_y = 0;
+
+    paddle_2.height = 100;
+    paddle_2.width = 10;
+    paddle_2.x = WINDOW_WIDTH - 20 - paddle_2.width;
+    paddle_2.y = middleHeight - paddle_2.height / 2;
+    paddle_2.vel_x = 0;
+    paddle_2.vel_y = 0;
+}
+
+void keep_paddle_on_scree(Game_Object *paddle) {
+    if (paddle->y <= 0) {
+        paddle->vel_y = 0;
+    } else if (paddle->y + paddle->height >= WINDOW_HEIGHT) {
+        paddle->vel_y = 0;
+    }
+}
+
+void move_right_paddle(SDL_Event event) {
+    if (event.key.keysym.sym == SDLK_UP && paddle_2.y > 0) {
+        paddle_2.vel_y = -PADDLE_VELOCITY;
+    }
+    if (event.key.keysym.sym == SDLK_DOWN &&
+        (paddle_2.y + paddle_2.height) < WINDOW_HEIGHT) {
+        paddle_2.vel_y = +PADDLE_VELOCITY;
+    }
+}
+
+void move_left_paddle(SDL_Event event) {
+    if (event.key.keysym.sym == SDLK_w && paddle_1.y > 0) {
+        paddle_1.vel_y = -PADDLE_VELOCITY;
+    }
+    if (event.key.keysym.sym == SDLK_s &&
+        (paddle_1.y + paddle_1.height) < WINDOW_HEIGHT) {
+        paddle_1.vel_y = PADDLE_VELOCITY;
+    }
 }
 
 void process_input() {
@@ -54,12 +106,28 @@ void process_input() {
 
     switch (event.type) {
     case SDL_QUIT:
-        game_is_running = FALSE;
+        game_is_running = false;
         break;
     case SDL_KEYDOWN:
         if (event.key.keysym.sym == SDLK_ESCAPE)
-            game_is_running = FALSE;
+            game_is_running = false;
+
+        // Starts moving the ball
+        if (event.key.keysym.sym == SDLK_SPACE) {
+            ball.vel_x = BALL_VELOCITY;
+            ball.vel_y = BALL_VELOCITY;
+        }
+
+        move_left_paddle(event);
+        move_right_paddle(event);
+
+        if (event.key.keysym.sym == SDLK_SPACE) {
+            ball.vel_x = BALL_VELOCITY;
+            ball.vel_y = BALL_VELOCITY;
+        }
         break;
+
+    case SDL_KEYUP:
 
     default:
         break;
@@ -78,8 +146,14 @@ void update() {
     float delta_time = (SDL_GetTicks() - last_frame_time) / 1000.0f;
     last_frame_time = SDL_GetTicks();
 
-    ball.x += 200 * delta_time;
-    ball.y += 200 * delta_time;
+    ball.x += ball.vel_x * delta_time;
+    ball.y += ball.vel_y * delta_time;
+
+    paddle_1.y += paddle_1.vel_y * delta_time;
+    paddle_2.y += paddle_2.vel_y * delta_time;
+
+    keep_paddle_on_scree(&paddle_1);
+    keep_paddle_on_scree(&paddle_2);
 }
 
 void render() {
@@ -89,9 +163,13 @@ void render() {
     // TODO: Start drawing game objects
     // Draw the "ball"
     SDL_Rect ball_rect = {ball.x, ball.y, ball.width, ball.height};
+    SDL_Rect paddle_1_rect = {paddle_1.x, paddle_1.y, paddle_1.width, paddle_1.height};
+    SDL_Rect paddle_2_rect = {paddle_2.x, paddle_2.y, paddle_2.width, paddle_2.height};
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &ball_rect);
+    SDL_RenderFillRect(renderer, &paddle_1_rect);
+    SDL_RenderFillRect(renderer, &paddle_2_rect);
 
     SDL_RenderPresent(renderer);
 }
