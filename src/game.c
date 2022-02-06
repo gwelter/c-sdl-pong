@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
+int last_frame_time = 0;
 int game_is_running = FALSE;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -65,7 +66,21 @@ void process_input() {
     }
 }
 
-void update() {}
+void update() {
+    // Logic to keep a fixed timestamp
+
+    // Sleep until we reach the frame target time
+    int time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - last_frame_time);
+    if (time_to_wait > 0 && time_to_wait <= FRAME_TARGET_TIME)
+        SDL_Delay(time_to_wait);
+
+    // Get a delta time factor converted to seconds to be used to update my objects
+    float delta_time = (SDL_GetTicks() - last_frame_time) / 1000.0f;
+    last_frame_time = SDL_GetTicks();
+
+    ball.x += 200 * delta_time;
+    ball.y += 200 * delta_time;
+}
 
 void render() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
