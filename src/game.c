@@ -59,14 +59,14 @@ void setup() {
 
     paddle_1.height = 100;
     paddle_1.width = 10;
-    paddle_1.x = 20;
+    paddle_1.x = 25;
     paddle_1.y = middleHeight - paddle_1.height / 2;
     paddle_1.vel_x = 0;
     paddle_1.vel_y = 0;
 
     paddle_2.height = 100;
     paddle_2.width = 10;
-    paddle_2.x = WINDOW_WIDTH - 20 - paddle_2.width;
+    paddle_2.x = WINDOW_WIDTH - 25 - paddle_2.width;
     paddle_2.y = middleHeight - paddle_2.height / 2;
     paddle_2.vel_x = 0;
     paddle_2.vel_y = 0;
@@ -111,6 +111,27 @@ void move_left_paddle(SDL_Event event) {
     if (event.key.keysym.sym == SDLK_s &&
         (paddle_1.y + paddle_1.height) < WINDOW_HEIGHT) {
         paddle_1.vel_y = PADDLE_VELOCITY;
+    }
+}
+
+void detect_ball_paddle_collision(Game_Object paddle, int paddle_side_multiplier) {
+    if (ball.y < paddle.y || ball.y > (paddle.y + paddle.height)) {
+        return;
+    }
+
+    if (paddle_side_multiplier == RIGHT) {
+        if (ball.x >= paddle.x)
+            ball.vel_x = BALL_VELOCITY * paddle_side_multiplier;
+    } else {
+        if (ball.x < (paddle.x + paddle.width)) {
+            ball.vel_x = BALL_VELOCITY * paddle_side_multiplier;
+        }
+    }
+}
+
+void detect_score() {
+    if (ball.x >= (WINDOW_WIDTH - 10) || ball.x <= 10) {
+        setup();
     }
 }
 
@@ -171,6 +192,10 @@ void update() {
 
     keep_paddle_on_screen(&paddle_1);
     keep_paddle_on_screen(&paddle_2);
+
+    detect_ball_paddle_collision(paddle_1, LEFT);
+    detect_ball_paddle_collision(paddle_2, RIGHT);
+    detect_score();
 }
 
 void render() {
