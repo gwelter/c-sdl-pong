@@ -72,7 +72,21 @@ void setup() {
     paddle_2.vel_y = 0;
 }
 
-void keep_paddle_on_scree(Game_Object *paddle) {
+void keep_ball_on_screen() {
+    if ((ball.y + ball.height) >= WINDOW_HEIGHT) {
+        ball.vel_y = -BALL_VELOCITY;
+    } else if (ball.y <= 0) {
+        ball.vel_y = BALL_VELOCITY;
+    }
+
+    if ((ball.x + ball.width) >= WINDOW_WIDTH) {
+        ball.vel_x = -BALL_VELOCITY;
+    } else if (ball.x <= 0) {
+        ball.vel_x = BALL_VELOCITY;
+    }
+}
+
+void keep_paddle_on_screen(Game_Object *paddle) {
     if (paddle->y <= 0) {
         paddle->vel_y = 0;
     } else if (paddle->y + paddle->height >= WINDOW_HEIGHT) {
@@ -112,22 +126,23 @@ void process_input() {
         if (event.key.keysym.sym == SDLK_ESCAPE)
             game_is_running = false;
 
-        // Starts moving the ball
-        if (event.key.keysym.sym == SDLK_SPACE) {
-            ball.vel_x = BALL_VELOCITY;
-            ball.vel_y = BALL_VELOCITY;
-        }
-
         move_left_paddle(event);
         move_right_paddle(event);
 
-        if (event.key.keysym.sym == SDLK_SPACE) {
+        if (event.key.keysym.sym == SDLK_SPACE && ball.vel_x == 0 && ball.vel_y == 0) {
             ball.vel_x = BALL_VELOCITY;
             ball.vel_y = BALL_VELOCITY;
         }
         break;
 
     case SDL_KEYUP:
+        if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
+            paddle_2.vel_y = 0;
+        }
+        if (event.key.keysym.sym == SDLK_w || event.key.keysym.sym == SDLK_s) {
+            paddle_1.vel_y = 0;
+        }
+        break;
 
     default:
         break;
@@ -138,9 +153,9 @@ void update() {
     // Logic to keep a fixed timestamp
 
     // Sleep until we reach the frame target time
-    int time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - last_frame_time);
-    if (time_to_wait > 0 && time_to_wait <= FRAME_TARGET_TIME)
-        SDL_Delay(time_to_wait);
+    // int time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - last_frame_time);
+    // if (time_to_wait > 0 && time_to_wait <= FRAME_TARGET_TIME)
+    //     SDL_Delay(time_to_wait);
 
     // Get a delta time factor converted to seconds to be used to update my objects
     float delta_time = (SDL_GetTicks() - last_frame_time) / 1000.0f;
@@ -149,11 +164,13 @@ void update() {
     ball.x += ball.vel_x * delta_time;
     ball.y += ball.vel_y * delta_time;
 
+    keep_ball_on_screen();
+
     paddle_1.y += paddle_1.vel_y * delta_time;
     paddle_2.y += paddle_2.vel_y * delta_time;
 
-    keep_paddle_on_scree(&paddle_1);
-    keep_paddle_on_scree(&paddle_2);
+    keep_paddle_on_screen(&paddle_1);
+    keep_paddle_on_screen(&paddle_2);
 }
 
 void render() {
